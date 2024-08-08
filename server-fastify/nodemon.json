@@ -1,0 +1,13 @@
+{
+  "ignore": [
+    "node_modules",
+    "*.json"
+  ],
+  "watch": [
+    "plugins/**/*.js",
+    "routes/**/*.js",
+    "app.js"
+  ],
+  "ext": "js,cjs,mjs,json",
+  "delay": 500
+}
