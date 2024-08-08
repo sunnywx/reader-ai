@@ -1,0 +1,22 @@
+{
+  "name": "server-fastify",
+  "version": "0.1.0",
+  "description": "server side using fastify",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "fastify",
+    "api",
+    "service"
+  ],
+  "author": "sunnywx",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/swagger": "^8.15.0",
+    "@fastify/swagger-ui": "^4.0.1",
+    "fastify": "^4.28.1"
+  }
+}
