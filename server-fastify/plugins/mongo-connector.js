@@ -8,6 +8,8 @@ import fastifyMongo from '@fastify/mongodb'
 async function dbConnector (fastify, options) {
   fastify.register(fastifyMongo, {
     url: process.env.DB_URI,
+    // force to close the mongodb connection when app stopped
+    // the default value is false
     forceClose: true,
     serverSelectionTimeoutMS: 3000
   })

@@ -6,7 +6,8 @@
   "watch": [
     "plugins/**/*.js",
     "routes/**/*.js",
-    "app.js"
+    "app.js",
+    "*.js"
   ],
   "ext": "js,cjs,mjs,json",
   "delay": 500
