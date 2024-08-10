@@ -21,6 +21,7 @@
     "@fastify/mongodb": "^8.0.0",
     "@fastify/swagger": "^8.15.0",
     "@fastify/swagger-ui": "^4.0.1",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
     "fastify-plugin": "^4.5.1"

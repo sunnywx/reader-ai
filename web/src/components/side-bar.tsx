@@ -9,38 +9,80 @@ import {
   ThumbsUp,
   NotepadText,
   Bot,
-  Settings
+  Settings,
 } from "lucide-react";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import cs from 'clsx'
 
 type NavItem = {
   name: string;
   icon: ReactNode;
+  link: string;
 };
 
 const navs: NavItem[] = [
-  { name: "Home", icon: <Home className="mr-4" /> },
-  // { name: "Explore", icon: <Compass className="mr-4" /> },
-  { name: "Chat with book", icon: <Bot className="mr-4" /> },
-  { name: "Notebooks", icon: <NotepadText className="mr-4" /> },
-  // { name: "History", icon: <Clock className="mr-4" /> },
-  // { name: "Your Books", icon: <PlaySquare className="mr-4" /> },
-  { name: "Read Later", icon: <Clock className="mr-4" /> },
-  { name: "Liked Books", icon: <ThumbsUp className="mr-4" /> },
-  { name: "Settings", icon: <Settings className="mr-4" /> },
+  { name: "Books", icon: <Home className="mr-4" />, link: "/" },
+  { name: "Chat with book", icon: <Bot className="mr-4" />, link: "/chat" },
+  { name: "Notebooks", icon: <NotepadText className="mr-4" />, link: "/notes" },
+  { name: "Read Later", icon: <Clock className="mr-4" />, link: "/read-later" },
+  { name: "Liked Books", icon: <ThumbsUp className="mr-4" />, link: "/liked" },
+  { name: "Settings", icon: <Settings className="mr-4" />, link: "/settings" },
 ];
 
 export const Sidebar = () => {
+  const router = useRouter();
+  const [activeLink, setActiveLink] = useState("");
+
+  useEffect(() => {
+    setActiveLink(window.location.pathname);
+  }, []);
+
+  useEffect(() => {
+    // Listen for route changes
+    router.events.on("routeChangeComplete", handleRouteChange);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router]);
+
+  const handleRouteChange=(url: string)=> {
+    console.log('page url changed: ', url)
+    setActiveLink(url)
+  }
+
+  const isActive=(activeLink: string, curLink: string)=> {
+    // console.log('check active link: ', activeLink, curLink)
+    // special cases
+    if(activeLink.includes('/book/') && curLink === '/') return true
+
+    if(activeLink.includes('?p')){
+      return activeLink.startsWith(curLink)
+    }
+    return activeLink === curLink
+  }
+
   return (
     <div className="w-64 bg-slate-200 text-black h-screen overflow-y-auto">
       <div className="p-4">
         <nav>
           <ul className="space-y-2">
-            {navs.map(({ name, icon }) => (
-              <li key={name}>
+            {navs.map(({ name, icon, link }) => (
+              <li
+                key={name}
+                onClick={(ev) => {
+                  if(link === activeLink) return
+                  router.push(link, undefined, { shallow: true });
+                  setActiveLink(link)
+                }}
+              >
                 <a
-                  href="#"
-                  className="flex items-center p-2 hover:bg-slate-300 rounded"
+                  // href={link}
+                  className={cs("flex items-center p-2 hover:bg-slate-300 rounded cursor-pointer",
+                     {'bg-slate-300': isActive(activeLink, link)})}
                 >
                   {icon}
                   {name}

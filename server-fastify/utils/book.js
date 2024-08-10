@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 
-const acceptExts = [".pdf", ".epub"];
+const acceptExts = [".pdf", ".epub", ".md"];
 const ignoreDirs = [".git", "node_modules", "venv", ".venv", "__pycache__"];
 
 /**
@@ -11,28 +11,36 @@ const ignoreDirs = [".git", "node_modules", "venv", ".venv", "__pycache__"];
  * @returns {Promise<Array<{name: string, isDir?: boolean, files?: Array<{name: string, size: number}>}>>}
  *          A promise resolving to an array of directory and file objects.
  */
-export async function readDirectory(directoryPath) {
+export async function readDirectory(directoryPath, prefix='') {
   const result = [];
 
   const filesAndDirs = await fs.readdir(directoryPath);
 
   for (const file of filesAndDirs) {
+    // console.log('file, prefix ', file, prefix)
     const filePath = path.join(directoryPath, file);
     const stats = await fs.stat(filePath);
 
     if (stats.isDirectory() && !ignoreDirs.some((d) => filePath.endsWith(d))) {
-      const files = await readDirectory(filePath);
+      const next_prefix=path.join(prefix, file)
+      const files = await readDirectory(filePath, next_prefix);
+
       if (files.length) {
         result.push({
           name: file,
-          // isDir: true,
           files,
+          prefix: next_prefix
         });
       }
     } else {
       const ext = path.extname(file);
       if (acceptExts.includes(ext)) {
-        result.push({ name: file, size: stats.size });
+        result.push({ 
+          name: file,
+          size: stats.size,
+          createAt: stats.ctime,
+          prefix
+        });
       }
     }
   }

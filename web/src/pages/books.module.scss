@@ -15,17 +15,32 @@
   height: 200px;
   border: 1px solid var(--accent-6);
   border-radius: 12px;
-  padding: 10px;
+  // padding: 10px;
   cursor: pointer;
   word-break: break-word;
 
   &:hover {
     background-color: var(--gray-a6);
+    :global {
+      .book-cover {
+        opacity: 0.7;
+      }
+    }
   }
   &.isDir {
     justify-content: center;
     align-items: center;
     font-size: 2rem;
     font-weight: 700;
+  }
+  .name {
+    /* truncate long txt in fixed height */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4; /* Number of lines to show before truncating */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 4rem; /* Fixed height */
+    line-height: 20px;
   }
 }

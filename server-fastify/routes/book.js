@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import {join} from 'node:path'
 import {readDirectory} from '../utils/book.js'
 import {expandPath} from '../utils/index.js'
 
@@ -24,16 +25,20 @@ export default async function bookRoutes(fast, options){
 
   fast.get('/local-books', {
     schema: {
-      query: {},
+      query: {
+        p: {type: 'string', description: 'Directory path'}
+      },
       tags: ['book']
     }
   }, async (req, reply)=> {
-    const dir=process.env.LOCAL_BOOK_DIR
-    const realpath=expandPath(dir)
+    const base_dir=expandPath(process.env.LOCAL_BOOK_DIR || '~/books')
+    const relative_path=decodeURIComponent(req.query.p || '')
 
-    if(!dir || !fs.existsSync(realpath)) return {books: []}
+    const dir=join(base_dir, relative_path)
 
-    const books=await readDirectory(realpath)
+    if(!fs.existsSync(dir)) return {books: []}
+
+    const books=await readDirectory(dir, relative_path)
     return {books}
   })
 
