@@ -1,17 +1,13 @@
 # My ebook reader, enhanced by AI
 
-## Roadmap
-
-- [ ] server apis
-- [ ] swagger api docs
-- [ ] web client (react)
+![cover page](./cover.jpg)
 
 ## Backend
 
 implement server side using different ways:
 
-- python: fastapi
 - nodejs: fastify
+- python: fastapi
 - rest api
 - graphql
 
@@ -20,9 +16,25 @@ implement server side using different ways:
 implement client side using different ways:
 
 - typescript
-- react
-- solidjs
+- nextjs
 - svelte
+
+## Roadmap
+
+- [x] server apis
+- [x] swagger api docs
+- [x] list local books
+- [ ] hybrid search book, local/online
+- [ ] view pdf, epub, markdown file
+- [ ] chat with book, local LLM, other AI endpoints
+- [ ] notebook, for note taking
+- [ ] read later
+- [ ] liked books
+- [ ] LLM setting
+- [ ] RAG playground
+- [ ] share book
+- [ ] upload book
+- [ ] create own book, like gitbook
 
 ## License
 
