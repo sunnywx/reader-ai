@@ -15,13 +15,13 @@ import apiDocs from './plugins/api-docs.js'
 // load hooks
 
 // load own services
-import routes from './routes/routes.js' // don't omit file ext in node bare import
+// import bookRoutes from './routes/book.js' // don't omit file ext in node bare import
 
 const server=fastify({logger: true})
 
-// server.register(cors, {
-//   origin: true
-// })
+server.register(cors, {
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000']
+})
 
 server.register(mongoConnector)
 
@@ -36,7 +36,7 @@ server.register(apiDocs, {
 // Run the server
 const start = async () => {
   try {
-    await server.listen({ port: process.env.PORT || 3001, host: '127.0.0.1' })
+    await server.listen({ port: process.env.PORT || 3001, host: '0.0.0.0' })
   } catch (err) {
     server.log.error(err)
     process.exit(1)

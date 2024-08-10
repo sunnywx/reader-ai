@@ -6,6 +6,8 @@ import Autoload from "@fastify/autoload";
 import fp from 'fastify-plugin'
 import {getDirFromRoot} from '../utils/index.js'
 
+const port=process.env.PORT || 3001
+
 /**
  * generate swagger ui
  * @param {*} inst  fastify instance
@@ -16,14 +18,29 @@ async function generateApiDocs(fast, options) {
   fast.register(swagger, {
     swagger: {
       info: {
-        title: "api docs",
-        description: "Testing the Fastify swagger API",
+        title: "Api docs",
+        description: "Reader-ai swagger API",
         version: "0.1.0",
       },
-      host: "localhost:3001",
+      servers: [
+        {
+          url: `http://localhost:${port}`,
+          description: 'Development server'
+        }
+      ],
+      // host: "localhost:3001",
+      tags: [
+        { name: 'book', description: 'Book related endpoints' },
+        { name: 'user', description: 'User related endpoints' },
+        { name: 'ai', description: 'AI related endpoints' }
+      ],
       schemes: ["http", "https"],
       consumes: ["application/json"],
       produces: ["application/json"],
+      externalDocs: {
+        url: 'https://swagger.io/docs',
+        description: 'swagger docs'
+      }
     },
   });
 
