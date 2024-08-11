@@ -50,7 +50,7 @@ export const Sidebar = () => {
   }, [router]);
 
   const handleRouteChange=(url: string)=> {
-    console.log('page url changed: ', url)
+    // console.log('page url changed: ', url)
     setActiveLink(url)
   }
 
@@ -75,18 +75,18 @@ export const Sidebar = () => {
                 key={name}
                 onClick={(ev) => {
                   if(link === activeLink) return
-                  router.push(link, undefined, { shallow: true });
+                  // router.push({pathname: link, query: ''}, undefined, { shallow: true });
                   setActiveLink(link)
                 }}
               >
-                <a
-                  // href={link}
+                <Link
+                  href={link}
                   className={cs("flex items-center p-2 hover:bg-slate-300 rounded cursor-pointer",
                      {'bg-slate-300': isActive(activeLink, link)})}
                 >
                   {icon}
                   {name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

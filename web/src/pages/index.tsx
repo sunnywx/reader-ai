@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "./books.module.scss";
 import cs from "clsx";
 import Head from "next/head";
 import Image from "next/image";
 import { Book as BookIcon, Folder } from "lucide-react";
-import { Card, Flex, Inset, Tooltip } from "@radix-ui/themes";
+import { Flex, Inset, Tooltip } from "@radix-ui/themes";
 import { format } from "date-fns";
-import {useRouter} from 'next/router'
+import { useRouter } from "next/router";
+import { formatSize } from "@/lib/utils";
 
 interface Props {
   className?: string;
@@ -20,38 +21,57 @@ type Book = {
   size?: number;
   files?: Book[];
   createAt?: Date;
-  prefix?: string
+  prefix?: string;
 };
 
 export default function LocalBooks({ className }: Props) {
   const [books, setBooks] = useState<Book[]>([]);
-  const router=useRouter()
-  const {query}=router
+  const router = useRouter();
+  const { query } = router;
+  const rawQuery=useRef('')
+  const mounted=useRef(false)
 
-  const fetchBooks = async (p: string='') => {
-    const resp = await fetch(`http://localhost:3001/local-books?p=${p}`);
+  useEffect(()=> {
+    rawQuery.current=location.search
+  }, [])
+
+  const fetchBooks = async (p: string) => {
+    if(!mounted.current && rawQuery.current.includes('?p=') && p === undefined){
+      // ignore initial stale query.p
+      mounted.current=true
+      return
+    }
+
+    const resp = await fetch(`http://localhost:3001/local-books?p=${p || ''}`);
     const data = await resp.json();
 
     console.log("fetch books: ", data?.books);
 
     setBooks(data?.books || []);
-  };
+  }
 
   useEffect(() => {
+    // fixme: if depends on query.p will trigger twice when page refresh
     fetchBooks(query.p as string);
   }, [query.p]);
 
-  const handleClickBook=(book: Book, is_dir: boolean)=> {
-    if(is_dir){
-      router.push({
-        ...router,
-        query: {p: book.prefix}
-      }, undefined, {shallow: true})
-      return
+  const handleClickBook = (book: Book, is_dir: boolean) => {
+    if (is_dir) {
+      router.push(
+        {
+          ...router,
+          query: { p: book.prefix },
+        },
+        undefined,
+        { shallow: true }
+      );
+      return;
     }
 
-    router.push(['/book',book.prefix || '', book.name].join('/'), undefined, {shallow: true})
-  }
+    router.push(["/book", book.prefix || "", book.name].join("/"), undefined, {
+      shallow: true,
+    });
+  };
 
   return (
     <>
@@ -61,7 +81,7 @@ export default function LocalBooks({ className }: Props) {
 
       <div className={styles.wrap}>
         {books.map((book) => {
-          const { name, coverImg, size, files, createAt }=book
+          const { name, coverImg, size, files, createAt } = book;
           const isDir = Array.isArray(files);
 
           return (
@@ -70,21 +90,24 @@ export default function LocalBooks({ className }: Props) {
               className={cs(styles.book, {
                 [styles.isDir]: isDir,
               })}
-              onClick={ev=> handleClickBook(book, isDir)}
+              onClick={(ev) => handleClickBook(book, isDir)}
             >
               <Flex direction="column" className="gap-y-4 w-full h-full">
                 {isDir ? (
                   <Flex
                     justify="center"
                     align="center"
-                    className="relative w-full h-full"
+                    className="relative w-full h-full text-center text-2xl font-light"
                   >
                     <Folder
                       size={16}
                       className="absolute left-1 top-1"
                       color="var(--gray-10)"
                     />
-                    <p className="text-center">{name}</p>
+                    <p className="absolute right-1 top-1 text-xs">
+                      {files.length || 0} files
+                    </p>
+                    <p>{name}</p>
                   </Flex>
                 ) : (
                   <>
@@ -112,12 +135,17 @@ export default function LocalBooks({ className }: Props) {
                     </Inset>
 
                     <div className="flex flex-1 flex-col justify-between p-1">
-                      <p className={cs("text-sm", styles.name)}>{name}</p>
-                      {createAt && (
-                        <p className="text-xs text-gray-500">
-                          {format(new Date(createAt), "yyyy/MM/dd HH:mm")}
-                        </p>
-                      )}
+                      <Tooltip content={name}>
+                        <p className={cs("text-sm", styles.name)}>{name}</p>
+                      </Tooltip>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        {createAt && (
+                          <p className="">
+                            {format(new Date(createAt), "yyyy/MM/dd HH:mm")}
+                          </p>
+                        )}
+                        <p className="justify-end">{formatSize(size || 0)}</p>
+                      </div>
                     </div>
                   </>
                 )}

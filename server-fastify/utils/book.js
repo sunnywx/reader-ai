@@ -45,5 +45,15 @@ export async function readDirectory(directoryPath, prefix='') {
     }
   }
 
-  return result;
+  // sort files, directory first, sort by name
+  return result.sort((f1, f2)=> {
+    if(Array.isArray(f1.files)){
+      if(Array.isArray(f2.files)) {
+        return f1.name.localeCompare(f2.name)
+      }
+      return -1
+    }
+
+    return f1.name.localeCompare(f2.name)
+  });
 }
