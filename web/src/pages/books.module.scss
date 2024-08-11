@@ -1,7 +1,8 @@
 .wrap {
   display: grid;
   width: 100%;
-  max-height: 100vh;
+  // height: 100%;
+  max-height: calc(100vh - 32px);
   overflow: auto;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   grid-gap: 1rem;

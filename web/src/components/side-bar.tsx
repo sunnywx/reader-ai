@@ -23,7 +23,7 @@ type NavItem = {
 };
 
 const navs: NavItem[] = [
-  { name: "Books", icon: <Home className="mr-4" />, link: "/" },
+  { name: "Home", icon: <Home className="mr-4" />, link: "/" },
   { name: "Chat with book", icon: <Bot className="mr-4" />, link: "/chat" },
   { name: "Notebooks", icon: <NotepadText className="mr-4" />, link: "/notes" },
   { name: "Read Later", icon: <Clock className="mr-4" />, link: "/read-later" },
@@ -31,7 +31,7 @@ const navs: NavItem[] = [
   { name: "Settings", icon: <Settings className="mr-4" />, link: "/settings" },
 ];
 
-export const Sidebar = () => {
+export const Sidebar = ({className}: {className?: string}) => {
   const router = useRouter();
   const [activeLink, setActiveLink] = useState("");
 
@@ -66,7 +66,7 @@ export const Sidebar = () => {
   }
 
   return (
-    <div className="w-64 bg-slate-200 text-black h-screen overflow-y-auto">
+    <div className={cs("w-64 bg-slate-200 text-black h-screen overflow-y-auto transition-all", className)}>
       <div className="p-4">
         <nav>
           <ul className="space-y-2">
