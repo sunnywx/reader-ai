@@ -1,0 +1,21 @@
+.pdf {
+  .toolbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    // z-index: 10;
+  }
+  
+  .outline {
+    // width: max-content;
+    max-width: 300px;
+    height: calc(100vh - 120px);
+    overflow: auto;
+    border-right: 1px solid var(--gray-4);
+  }
+
+  .body {
+    width: max-content;
+    height: calc(100vh - 120px);
+  }
+}
