@@ -17,7 +17,10 @@ import apiDocs from './plugins/api-docs.js'
 // load own services
 // import bookRoutes from './routes/book.js' // don't omit file ext in node bare import
 
-const server=fastify({logger: true})
+const server=fastify({
+  logger: true,
+  ignoreTrailingSlash: true
+})
 
 server.register(cors, {
   // origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
