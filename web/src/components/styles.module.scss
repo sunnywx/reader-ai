@@ -1,0 +1,18 @@
+.search_result {
+  visibility: hidden;
+  &.show {
+    visibility: visible;
+  }
+
+  > .item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    margin-bottom: 5px;
+    height: 40px;
+    cursor: default;
+    &:hover {
+      background-color: var(--accent-4);
+    }
+  }
+}

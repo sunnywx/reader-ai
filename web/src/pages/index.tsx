@@ -3,31 +3,28 @@ import styles from "./books.module.scss";
 import cs from "clsx";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
 import { Book as BookIcon, Folder } from "lucide-react";
 import { Flex, Inset, Tooltip } from "@radix-ui/themes";
 import { format } from "date-fns";
 import { useRouter } from "next/router";
 import { formatSize } from "@/lib/utils";
 import {BreadcrumbComp, NavProp} from '@/components/breadcrumb'
+import {Book} from '@/types/book'
+import {useBookStore, State} from '@/store/book-store'
+import {shallow} from 'zustand/shallow'
+
+const selector=(s: State)=> ({
+  books: s.books,
+  setBooks: s.setBooks
+})
 
 interface Props {
   className?: string;
 }
 
-type Book = {
-  // id: string
-  name: string;
-  // author: string
-  coverImg?: string;
-  size?: number;
-  files?: Book[];
-  createAt?: Date;
-  prefix?: string;
-};
-
 export default function LocalBooks({ className }: Props) {
-  const [books, setBooks] = useState<Book[]>([]);
+  const {books, setBooks}=useBookStore(selector, shallow)
+  // const [books, setBooks] = useState<Book[]>([]);
   const router = useRouter();
   const { query } = router;
   const rawQuery = useRef("");
@@ -69,7 +66,7 @@ export default function LocalBooks({ className }: Props) {
     const resp = await fetch(`http://localhost:3001/local-books?p=${p || ""}`);
     const data = await resp.json();
 
-    console.log("fetch books: ", data?.books);
+    // console.log("fetch books: ", data?.books);
 
     setBooks(data?.books || []);
   };
