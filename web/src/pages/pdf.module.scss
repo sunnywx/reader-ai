@@ -1,0 +1,17 @@
+.pdf {
+  .toolbar {
+
+  }
+  
+  .outline {
+    width: max-content;
+    max-width: 400px;
+    height: calc(100vh - 120px);
+    overflow: auto;
+    border-right: 1px solid var(--gray-4);
+  }
+
+  .body {
+    width: 100%;
+  }
+}

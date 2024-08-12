@@ -20,7 +20,8 @@ import apiDocs from './plugins/api-docs.js'
 const server=fastify({logger: true})
 
 server.register(cors, {
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000']
+  // origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: true
 })
 
 server.register(mongoConnector)

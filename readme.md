@@ -36,6 +36,10 @@ implement client side using different ways:
 - [ ] upload book
 - [ ] create own book, like gitbook
 
+## Credits
+
+- [react-pdf](https://github.com/wojtekmaj/react-pdf)
+
 ## License
 
 MIT
