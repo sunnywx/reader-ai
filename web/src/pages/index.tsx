@@ -3,53 +3,69 @@ import styles from "./books.module.scss";
 import cs from "clsx";
 import Head from "next/head";
 import Image from "next/image";
-import { Book as BookIcon, Folder } from "lucide-react";
-import { Flex, Inset, Tooltip } from "@radix-ui/themes";
+import {
+   Book as BookIcon, 
+   Folder,
+  LayoutGrid as GridIcon, 
+  List as ListIcon
+} from "lucide-react";
+import { Flex, Inset, Tooltip, Table } from "@radix-ui/themes";
 import { format } from "date-fns";
 import { useRouter } from "next/router";
 import { formatSize } from "@/lib/utils";
-import {BreadcrumbComp, NavProp} from '@/components/breadcrumb'
-import {Book} from '@/types/book'
-import {useBookStore, State} from '@/store/book-store'
-import {shallow} from 'zustand/shallow'
+import { BreadcrumbComp, NavProp } from "@/components/breadcrumb";
+import { Book } from "@/types/book";
+import { useBookStore, State } from "@/store/book-store";
+import { shallow } from "zustand/shallow";
+import { ButtonGroup } from "@/components/button-group";
 
-const selector=(s: State)=> ({
+const selector = (s: State) => ({
   books: s.books,
-  setBooks: s.setBooks
-})
+  setBooks: s.setBooks,
+});
 
 interface Props {
   className?: string;
 }
 
+enum ViewMode {
+  list = "list",
+  card = "card",
+}
+
 export default function LocalBooks({ className }: Props) {
-  const {books, setBooks}=useBookStore(selector, shallow)
+  const { books, setBooks } = useBookStore(selector, shallow);
   const router = useRouter();
   const { query } = router;
   const rawQuery = useRef("");
   const mounted = useRef(false);
+  const [viewMode, setViewMode] = useState(query.mode || ViewMode.card);
 
-  const navs=useMemo<NavProp[]>(()=> {
-    const first={name: 'All books', link: '/'}
+  const navs = useMemo<NavProp[]>(() => {
+    const first = { name: "All books", link: "/" };
 
-    if(!query.p) return [first]
+    if (!query.p) return [first];
 
-    let lastLink=''
-    const prefix='?p='
-    const parts=(query.p as string).split('/').map((v, idx)=> {
-      lastLink=[lastLink, v].join('/')
-      if(lastLink.startsWith('/')){
-        lastLink=lastLink.slice(1)
+    let lastLink = "";
+    const prefix = "?p=";
+    const parts = (query.p as string).split("/").map((v, idx) => {
+      lastLink = [lastLink, v].join("/");
+      if (lastLink.startsWith("/")) {
+        lastLink = lastLink.slice(1);
       }
-      return {name: v, link: prefix + lastLink}
-    })
+      return { name: v, link: prefix + lastLink };
+    });
 
-    return [first, ...parts]
-  }, [query.p])
+    return [first, ...parts];
+  }, [query.p]);
 
   useEffect(() => {
     rawQuery.current = location.search;
   }, []);
+
+  useEffect(() => {
+    query.mode && setViewMode(query.mode);
+  }, [query.mode]);
 
   const fetchBooks = async (p: string) => {
     if (
@@ -65,7 +81,7 @@ export default function LocalBooks({ className }: Props) {
     const resp = await fetch(`http://localhost:3001/local-books?p=${p || ""}`);
     const data = await resp.json();
 
-    // console.log("fetch books: ", data?.books);
+    console.log("fetch books: ", data?.books);
 
     setBooks(data?.books || []);
   };
@@ -77,33 +93,29 @@ export default function LocalBooks({ className }: Props) {
 
   const handleClickBook = (book: Book, is_dir: boolean) => {
     if (is_dir) {
+      const params: any={
+        ...router,
+        query: { p: book.prefix },
+      }
+      if(query.mode){
+        params.mode=query.mode
+      }
       router.push(
-        {
-          ...router,
-          query: { p: book.prefix },
-        },
+        params,
         undefined,
         { shallow: true }
       );
       return;
     }
 
-    router.push(["/book", book.prefix || "", book.name].join("/"), undefined, {
+    router.push(["/book", book.prefix || "", decodeURIComponent(book.name)].join("/"), undefined, {
       shallow: true,
     });
   };
 
-  return (
-    <>
-      <Head>
-        <title>Reader-AI - One-stop personal learning platform</title>
-      </Head>
-
-      <div className="w-full">
-        <div className="flex items-center w-max h-8 px-2">
-          <BreadcrumbComp navs={navs} />
-        </div>
-
+  function renderBooks() {
+    if (viewMode === ViewMode.card) {
+      return (
         <div className={styles.wrap}>
           {books.map((book) => {
             const { name, coverImg, size, files, createAt } = book;
@@ -179,6 +191,98 @@ export default function LocalBooks({ className }: Props) {
             );
           })}
         </div>
+      );
+    }
+
+    if (viewMode === ViewMode.list) {
+      return (
+        <div
+          className="w-full p-4 overflow-auto"
+          style={{
+            maxHeight: "calc(100vh - 64px)",
+          }}
+        >
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Size</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Created At</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
+              {books.map((book, index) => (
+                <Table.Row
+                  key={index}
+                  className="hover:bg-blue-100 cursor-pointer"
+                  onClick={(ev) =>
+                    handleClickBook(book, Array.isArray(book.files))
+                  }
+                >
+                  <Table.Cell className="max-w-[700px] truncate">
+                    {decodeURIComponent(book.name)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {Array.isArray(book.files)
+                      ? `Directory (${book.files.length} files)`
+                      : "File"}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {book.size
+                      ? `${(book.size / 1024 / 1024).toFixed(2)} MB`
+                      : ""}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {book.createAt && (
+                      <p className="">
+                        {format(new Date(book.createAt), "yyyy/MM/dd HH:mm")}
+                      </p>
+                    )}
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </div>
+      );
+    }
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Reader-AI - One-stop personal learning platform</title>
+      </Head>
+
+      <div className="w-full">
+        <div className="flex items-center w-full h-16 px-2 pr-6 justify-between">
+          <BreadcrumbComp navs={navs} />
+          <ButtonGroup
+            options={[
+              { label: <span className="inline-flex items-center gap-1"><GridIcon size={14}/>Card view</span>, value: ViewMode.card },
+              { label: <span className="inline-flex items-center gap-1"><ListIcon size={14}/>List view</span>, value: ViewMode.list },
+            ]}
+            value={viewMode}
+            onChange={(val) => {
+              router.push(
+                {
+                  query: {
+                    ...router.query,
+                    mode: val,
+                  },
+                },
+                undefined,
+                { shallow: true }
+              );
+
+              setViewMode(val);
+            }}
+          />
+        </div>
+
+        {renderBooks()}
       </div>
     </>
   );
