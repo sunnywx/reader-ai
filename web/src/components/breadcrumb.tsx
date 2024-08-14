@@ -45,7 +45,7 @@ export const BreadcrumbComp = ({ className, navs = [] }: Props) => {
             if (!isLast) {
               return (
                 <>
-                  <BreadcrumbItem>
+                  <BreadcrumbItem key={idx}>
                     <BreadcrumbLink asChild>
                       <Link href={link}>{name}</Link>
                     </BreadcrumbLink>
@@ -55,7 +55,7 @@ export const BreadcrumbComp = ({ className, navs = [] }: Props) => {
               );
             } else {
               return (
-                <BreadcrumbItem>
+                <BreadcrumbItem key={idx}>
                   <BreadcrumbPage>{name}</BreadcrumbPage>
                 </BreadcrumbItem>
               );

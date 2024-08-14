@@ -21,10 +21,13 @@
     "@fastify/mongodb": "^8.0.0",
     "@fastify/swagger": "^8.15.0",
     "@fastify/swagger-ui": "^4.0.1",
+    "axios": "^1.7.3",
+    "cheerio": "^1.0.0",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
-    "fastify-plugin": "^4.5.1"
+    "fastify-plugin": "^4.5.1",
+    "https-proxy-agent": "^7.0.5"
   },
   "devDependencies": {
     "@types/node": "^22.1.0",

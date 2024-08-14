@@ -138,9 +138,9 @@ export default async function bookRoutes(fast, options) {
 
           reply
             .code(200)
-            // .header("Content-Type", "application/pdf") // todo: guess file mime type
-            .header("Content-Type", "application/octet-stream")
-            .header("Content-Disposition", `inline; filename="${filename}"`)
+            .header("Content-Type", "application/pdf") // todo: guess file mime type
+            // .header("Content-Type", "application/octet-stream")
+            // .header("Content-Disposition", `inline; filename="${filename}"`)
             .header('Content-Length', stats.size)
             // .send(fileStream);
             .send(buff);

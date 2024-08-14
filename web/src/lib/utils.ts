@@ -21,3 +21,12 @@ export const formatSize=(bytes: number)=> {
 //   )
 //   return fn
 // };
+
+// return full url with local proxy server
+export const proxyUrl=(slug: string)=> {
+  let prefix=process.env.NEXT_PUBLIC_PROXY_URL || 'http://127.0.0.1:3001'
+  if(prefix.endsWith('/')){
+    prefix=prefix.slice(0, -1)
+  }
+  return [prefix, slug].join('/')
+}

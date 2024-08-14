@@ -4,7 +4,7 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import styles from "./pdf.module.scss";
 import cs from "clsx";
-import { TextField } from "@radix-ui/themes";
+import { TextField, Button, Switch } from "@radix-ui/themes";
 import { Search as SearchIcon } from "lucide-react";
 import {useLayoutStore} from '@/store/layout-store'
 
@@ -39,13 +39,18 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
 
   const {hideSidebar}=useLayoutStore()
 
+  const [useNativeViewer, setUseNativeViewer] = useState(true);
+
   const fetchFileBlob = async (url: string) => {
     if(!url) return
     try {
       const resp = await fetch(url);
       const buff = await resp.arrayBuffer();
       // setPdfData(new Uint8Array(buff));
-      setPdfData(buff);
+      setPdfData(buff)
+
+      // const blob = await resp.blob();
+      // setPdfData(new Uint8Array(blob));
     } catch (err) {
       console.error("Error fetching PDF:", err);
     }
@@ -64,7 +69,7 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
           }
         });
       },
-      { threshold: 0.5 } // Trigger when 50% of the page is visible
+      { threshold: 0.3 } // Trigger when 50% of the page is visible
     );
 
     pagesRef.current.forEach((page) => {
@@ -137,29 +142,45 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
           styles.toolbar
         )}
       >
-        <div className="flex justify-between items-center">
-          <p className="mr-4 w-[200px]">
-            Page {currentPage || (numPages ? 1 : "--")} of {numPages || "--"}
-          </p>
+        <div className="flex justify-between items-center w-full px-4 pl-0">
+          <div className="flex items-center" style={{
+            visibility: useNativeViewer ? 'hidden' : 'visible'
+          }}>
+            <p className="mr-4 w-[200px]">
+              Page {currentPage || (numPages ? 1 : "--")} of {numPages || "--"}
+            </p>
 
-          <button
-            type="button"
-            disabled={currentPage <= 1}
-            onClick={previousPage}
-            className="mr-4 cursor-pointer"
-          >
-            Prev
-          </button>
-          <button
-            type="button"
-            disabled={currentPage >= numPages}
-            onClick={nextPage}
-            className="cursor-pointer"
-          >
-            Next
-          </button>
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={previousPage}
+              className="mr-4 cursor-pointer"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              disabled={currentPage >= numPages}
+              onClick={nextPage}
+              className="cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
 
-          <TextField.Root
+          <div className="flex items-center cursor-pointer mr-8">
+            <Switch
+              checked={useNativeViewer}
+              onCheckedChange={setUseNativeViewer}
+              id="native-viewer-toggle"
+            />
+            <label htmlFor="native-viewer-toggle" className="ml-2">
+              Use Native Viewer
+            </label>
+          </div>
+          {/* <Button variant="solid" size='1' className="cursor-pointer mr-8">Native view</Button> */}
+
+          {/* <TextField.Root
             className="w-[260px] rounded-md ml-[100px]"
             placeholder="Search in book"
             value={searchText}
@@ -170,15 +191,25 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
             <TextField.Slot>
               <SearchIcon size={16} />
             </TextField.Slot>
-          </TextField.Root>
+          </TextField.Root> */}
         </div>
       </div>
 
-      <Document
+      {useNativeViewer ? (
+         <iframe
+         src={fileUrl}
+         width="100%"
+         height="100%"
+         title="PDF Viewer"
+       />
+      ) : (
+        <Document
         file={pdfData}
         onLoadSuccess={onDocumentLoadSuccess}
         // options={{
-        //   cMapUrl: '/cmaps/',
+        //   // cMapUrl: '/dist/cmaps/',
+        //   cMapUrl: 'https://unpkg.com/browse/pdfjs-dist@3.11.174/cmaps/',
+        //   cMapPacked: true,
         // }}
       >
         <div className="flex flex-row gap-4 max-h-screen overflow-hidden">
@@ -187,7 +218,7 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
             {renderOutlineItems(outline)}
           </div> */}
           <Outline onItemClick={onItemClick} className={styles.outline} />
-          <div className="flex flex-col max-h-screen overflow-auto flex-1">
+          <div className="flex flex-col max-h-full overflow-auto flex-1">
             {Array.from(new Array(numPages), (el, index) => (
               <div
                 key={`page_${index + 1}`}
@@ -198,20 +229,23 @@ export function PdfViewer({ fileUrl, className }: PdfViewerProps) {
                   pageNumber={index + 1}
                   className={styles.body}
                   scale={1}
-                  width={containerRef.current?.clientWidth || window.innerWidth - 300 - (hideSidebar ? 0 : 200)}
+                  customTextRenderer={textRenderer}
+                  renderTextLayer
+                  renderAnnotationLayer
+                  // renderInteractiveForms
+                  width={
+                    containerRef.current?.clientWidth ||
+                    window.innerWidth - 300 - (hideSidebar ? 0 : 200)
+                  }
                 />
               </div>
             ))}
           </div>
-
-          {/* <Page 
-            pageNumber={currentPage} 
-            className={styles.body} 
-            width={1000}
-            scale={1}
-          / > */}
         </div>
       </Document>
+      )}
+
+     
     </div>
   );
 }

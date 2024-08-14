@@ -24,7 +24,6 @@ interface Props {
 
 export default function LocalBooks({ className }: Props) {
   const {books, setBooks}=useBookStore(selector, shallow)
-  // const [books, setBooks] = useState<Book[]>([]);
   const router = useRouter();
   const { query } = router;
   const rawQuery = useRef("");
