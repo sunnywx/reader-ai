@@ -4,10 +4,11 @@ import cs from "clsx";
 import Head from "next/head";
 import Image from "next/image";
 import {
-   Book as BookIcon, 
-   Folder,
-  LayoutGrid as GridIcon, 
-  List as ListIcon
+  Book as BookIcon,
+  Folder,
+  LayoutGrid as GridIcon,
+  List as ListIcon,
+  File,
 } from "lucide-react";
 import { Flex, Inset, Tooltip, Table } from "@radix-ui/themes";
 import { format } from "date-fns";
@@ -39,7 +40,7 @@ export default function LocalBooks({ className }: Props) {
   const { query } = router;
   const rawQuery = useRef("");
   const mounted = useRef(false);
-  const [viewMode, setViewMode] = useState(query.mode || ViewMode.card);
+  const [viewMode, setViewMode] = useState(query.mode || ViewMode.list);
 
   const navs = useMemo<NavProp[]>(() => {
     const first = { name: "All books", link: "/" };
@@ -93,27 +94,37 @@ export default function LocalBooks({ className }: Props) {
 
   const handleClickBook = (book: Book, is_dir: boolean) => {
     if (is_dir) {
-      const params: any={
+      const params: any = {
         ...router,
         query: { p: book.prefix },
+      };
+      if (query.mode) {
+        params.mode = query.mode;
       }
-      if(query.mode){
-        params.mode=query.mode
-      }
-      router.push(
-        params,
-        undefined,
-        { shallow: true }
-      );
+      router.push(params, undefined, { shallow: true });
       return;
     }
 
-    router.push(["/book", book.prefix || "", decodeURIComponent(book.name)].join("/"), undefined, {
-      shallow: true,
-    });
+    router.push(
+      ["/book", book.prefix || "", decodeURIComponent(book.name)].join("/"),
+      undefined,
+      {
+        shallow: true,
+      }
+    );
   };
 
+  function renderOnlineBooks(){
+    return (
+      <div></div>
+    )
+  }
+
   function renderBooks() {
+    if(viewMode){
+
+    }
+
     if (viewMode === ViewMode.card) {
       return (
         <div className={styles.wrap}>
@@ -221,8 +232,21 @@ export default function LocalBooks({ className }: Props) {
                     handleClickBook(book, Array.isArray(book.files))
                   }
                 >
-                  <Table.Cell className="max-w-[700px] truncate">
-                    {decodeURIComponent(book.name)}
+                  <Table.Cell className={`max-w-[800px] ${!book.files ? 'text-blue-400' : ''}`}>
+                    <span className="flex items-center gap-2">
+                      <span>
+                        {Array.isArray(book.files) ? (
+                          <Folder size={12} />
+                        ) : (
+                          <File size={12} />
+                        )}
+                      </span>
+                      <Tooltip content={book.name}>
+                        <span className="truncate">
+                          {decodeURIComponent(book.name)}
+                        </span>
+                      </Tooltip>
+                    </span>
                   </Table.Cell>
                   <Table.Cell>
                     {Array.isArray(book.files)
@@ -261,8 +285,24 @@ export default function LocalBooks({ className }: Props) {
           <BreadcrumbComp navs={navs} />
           <ButtonGroup
             options={[
-              { label: <span className="inline-flex items-center gap-1"><GridIcon size={14}/>Card view</span>, value: ViewMode.card },
-              { label: <span className="inline-flex items-center gap-1"><ListIcon size={14}/>List view</span>, value: ViewMode.list },
+              {
+                label: (
+                  <span className="inline-flex items-center gap-1">
+                    <GridIcon size={14} />
+                    Card view
+                  </span>
+                ),
+                value: ViewMode.card,
+              },
+              {
+                label: (
+                  <span className="inline-flex items-center gap-1">
+                    <ListIcon size={14} />
+                    List view
+                  </span>
+                ),
+                value: ViewMode.list,
+              },
             ]}
             value={viewMode}
             onChange={(val) => {

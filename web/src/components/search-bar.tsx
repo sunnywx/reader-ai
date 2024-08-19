@@ -8,6 +8,7 @@ import { useBookStore } from "@/store/book-store";
 import { Book } from "@/types/book";
 import { useRouter } from "next/router";
 import { proxyUrl } from "@/lib/utils";
+// import mockOnlineBooks from '@/mock/online-books'
 
 const flatDeep = (books: Book[]): Book[] => {
   let result: Book[] = [];
@@ -30,14 +31,13 @@ const flatDeep = (books: Book[]): Book[] => {
 export const Search = () => {
   const [val, setVal] = useState("");
   const [search, setSearch] = useState("");
-  const { allBooks, setAllBooks } = useBookStore();
+  const { allBooks, setAllBooks, setOnlineMode, onlineMode } = useBookStore();
   const [focusMode, setFocusMode] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const allFetched = useRef(false);
 
   const [loading, setLoading]=useState(false)
-  const [onlineMode, setOnlineMode] = useState(false);
 
   // fetch all books
   useEffect(() => {
