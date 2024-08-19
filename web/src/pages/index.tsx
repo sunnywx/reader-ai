@@ -10,19 +10,21 @@ import {
   List as ListIcon,
   File,
 } from "lucide-react";
-import { Flex, Inset, Tooltip, Table } from "@radix-ui/themes";
+import { Flex, Inset, Tooltip, Table, Spinner } from "@radix-ui/themes";
 import { format } from "date-fns";
 import { useRouter } from "next/router";
-import { formatSize } from "@/lib/utils";
+import { formatSize, proxyUrl } from "@/lib/utils";
 import { BreadcrumbComp, NavProp } from "@/components/breadcrumb";
-import { Book } from "@/types/book";
-import { useBookStore, State } from "@/store/book-store";
+import { Book, OnlineBook } from "@/types/book";
+import { useBookStore, State, Actions } from "@/store/book-store";
 import { shallow } from "zustand/shallow";
 import { ButtonGroup } from "@/components/button-group";
 
-const selector = (s: State) => ({
+const selector = (s: State & Actions) => ({
   books: s.books,
   setBooks: s.setBooks,
+  onlineMode: s.onlineMode,
+  loading: s.loading
 });
 
 interface Props {
@@ -35,7 +37,7 @@ enum ViewMode {
 }
 
 export default function LocalBooks({ className }: Props) {
-  const { books, setBooks } = useBookStore(selector, shallow);
+  const { books, setBooks, onlineMode, loading } = useBookStore(selector, shallow);
   const router = useRouter();
   const { query } = router;
   const rawQuery = useRef("");
@@ -68,7 +70,7 @@ export default function LocalBooks({ className }: Props) {
     query.mode && setViewMode(query.mode);
   }, [query.mode]);
 
-  const fetchBooks = async (p: string) => {
+  const fetchBooks = async (p: string, online?: boolean) => {
     if (
       !mounted.current &&
       rawQuery.current.includes("?p=") &&
@@ -79,20 +81,29 @@ export default function LocalBooks({ className }: Props) {
       return;
     }
 
-    const resp = await fetch(`http://localhost:3001/local-books?p=${p || ""}`);
-    const data = await resp.json();
+    const search_word = p || "";
 
-    console.log("fetch books: ", data?.books);
+    if (!online) {
+      const resp = await fetch(proxyUrl(`/local-books?p=${search_word}`));
+      const data = await resp.json();
+      console.log("fetch local books: ", data?.books);
 
-    setBooks(data?.books || []);
+      setBooks(data?.books || []);
+    } else {
+    }
   };
 
   useEffect(() => {
     // fixme: if depends on query.p will trigger twice when page refresh
-    fetchBooks(query.p as string);
-  }, [query.p]);
+    fetchBooks(query.p as string, onlineMode);
+  }, [query.p, onlineMode]);
 
-  const handleClickBook = (book: Book, is_dir: boolean) => {
+  const handleClickBook = (book: Book | OnlineBook, is_dir: boolean) => {
+    if (onlineMode) {
+      window.open((book as OnlineBook).download_url, "_blank");
+      return;
+    }
+
     if (is_dir) {
       const params: any = {
         ...router,
@@ -114,17 +125,145 @@ export default function LocalBooks({ className }: Props) {
     );
   };
 
-  function renderOnlineBooks(){
-    return (
-      <div></div>
-    )
+  function renderOnlineBooks() {
+    if (viewMode === ViewMode.card) {
+      return (
+        <div className={styles.wrap}>
+          {books.map((book) => {
+            const {
+              id,
+              title,
+              size,
+              download_url,
+              pages,
+              extension,
+              publisher,
+              year,
+            } = book;
+            return (
+              <div
+                key={id}
+                className={cs(styles.book)}
+                onClick={(ev) => handleClickBook(book, false)}
+              >
+                <Flex direction="column" className="gap-y-4 w-full h-full">
+                  <>
+                    <Inset
+                      clip="padding-box"
+                      side="top"
+                      pb="0"
+                      className="relative w-full rounded-t-xl book-cover"
+                    >
+                      <BookIcon
+                        size={16}
+                        className="absolute left-1 top-1"
+                        color="var(--gray-10)"
+                      />
+                      <Image
+                        src="/img/book_cover.png"
+                        width={200}
+                        height={120}
+                        alt="Book cover placeholder"
+                        style={{
+                          objectFit: "cover",
+                          backgroundColor: "var(--gray-5)",
+                        }}
+                      />
+                    </Inset>
+
+                    <div className="flex flex-1 flex-col justify-between p-1">
+                      <Tooltip content={title}>
+                        <p className={cs("text-sm", styles.name)}>{title}</p>
+                      </Tooltip>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <p className="flex flex-1 gap-1">
+                          <span>{extension}</span>
+                          <span>{size}</span>
+                        </p>
+                        <p className="justify-end">Year: {year}</p>
+                      </div>
+                    </div>
+                  </>
+                </Flex>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (viewMode === ViewMode.list) {
+      return (
+        <div
+          className="w-full p-4 overflow-auto"
+          style={{
+            maxHeight: "calc(100vh - 64px)",
+          }}
+        >
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Size</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Ext</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Year</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
+              {books.map((book, index) => {
+                const {
+                  id,
+                  title,
+                  size,
+                  download_url,
+                  pages,
+                  extension,
+                  publisher,
+                  year,
+                } = book;
+                return (
+                  <Table.Row
+                    key={id || index}
+                    className="hover:bg-blue-100 cursor-pointer"
+                    onClick={(ev) => handleClickBook(book, false)}
+                  >
+                    <Table.Cell className={`max-w-[600px] text-blue-400`}>
+                      <span className="flex items-center gap-2">
+                        <span>
+                          <File size={12} />
+                        </span>
+                        <Tooltip content={title}>
+                          <span className="truncate">
+                            {decodeURIComponent(title)}
+                          </span>
+                        </Tooltip>
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>File</Table.Cell>
+                    <Table.Cell>
+                      {typeof book.size === "number"
+                        ? `${(book.size / 1024 / 1024).toFixed(2)} MB`
+                        : book.size}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <p className="">{extension}</p>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <p className="">{year}</p>
+                    </Table.Cell>
+                  </Table.Row>
+                );
+              })}
+            </Table.Body>
+          </Table.Root>
+        </div>
+      );
+    }
   }
 
   function renderBooks() {
-    if(viewMode){
-
-    }
-
     if (viewMode === ViewMode.card) {
       return (
         <div className={styles.wrap}>
@@ -224,49 +363,56 @@ export default function LocalBooks({ className }: Props) {
             </Table.Header>
 
             <Table.Body>
-              {books.map((book, index) => (
-                <Table.Row
-                  key={index}
-                  className="hover:bg-blue-100 cursor-pointer"
-                  onClick={(ev) =>
-                    handleClickBook(book, Array.isArray(book.files))
-                  }
-                >
-                  <Table.Cell className={`max-w-[800px] ${!book.files ? 'text-blue-400' : ''}`}>
-                    <span className="flex items-center gap-2">
-                      <span>
-                        {Array.isArray(book.files) ? (
-                          <Folder size={12} />
-                        ) : (
-                          <File size={12} />
-                        )}
-                      </span>
-                      <Tooltip content={book.name}>
-                        <span className="truncate">
-                          {decodeURIComponent(book.name)}
+              {books.map((book, index) => {
+                const { name, coverImg, size, files, createAt } = book;
+                return (
+                  <Table.Row
+                    key={index}
+                    className="hover:bg-blue-100 cursor-pointer"
+                    onClick={(ev) =>
+                      handleClickBook(book, Array.isArray(files))
+                    }
+                  >
+                    <Table.Cell
+                      className={`max-w-[600px] ${
+                        !files ? "text-blue-400" : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>
+                          {Array.isArray(files) ? (
+                            <Folder size={12} />
+                          ) : (
+                            <File size={12} />
+                          )}
                         </span>
-                      </Tooltip>
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    {Array.isArray(book.files)
-                      ? `Directory (${book.files.length} files)`
-                      : "File"}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {book.size
-                      ? `${(book.size / 1024 / 1024).toFixed(2)} MB`
-                      : ""}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {book.createAt && (
-                      <p className="">
-                        {format(new Date(book.createAt), "yyyy/MM/dd HH:mm")}
-                      </p>
-                    )}
-                  </Table.Cell>
-                </Table.Row>
-              ))}
+                        <Tooltip content={name}>
+                          <span className="truncate">
+                            {decodeURIComponent(name)}
+                          </span>
+                        </Tooltip>
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {Array.isArray(files)
+                        ? `Directory (${files.length} files)`
+                        : "File"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {book.size
+                        ? `${(book.size / 1024 / 1024).toFixed(2)} MB`
+                        : book.size}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {createAt && (
+                        <p className="">
+                          {format(new Date(createAt), "yyyy/MM/dd HH:mm")}
+                        </p>
+                      )}
+                    </Table.Cell>
+                  </Table.Row>
+                );
+              })}
             </Table.Body>
           </Table.Root>
         </div>
@@ -322,7 +468,9 @@ export default function LocalBooks({ className }: Props) {
           />
         </div>
 
-        {renderBooks()}
+        {loading && <Spinner />}
+
+        {onlineMode ? renderOnlineBooks() : renderBooks()}
       </div>
     </>
   );

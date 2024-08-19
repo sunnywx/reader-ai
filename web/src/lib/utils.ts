@@ -28,5 +28,8 @@ export const proxyUrl=(slug: string)=> {
   if(prefix.endsWith('/')){
     prefix=prefix.slice(0, -1)
   }
+  if(slug.startsWith('/')){
+    slug=slug.slice(1)
+  }
   return [prefix, slug].join('/')
 }
