@@ -187,12 +187,13 @@ export const Search = () => {
             <Tooltip content="Open in new Tab">
               <span
                 className="w-6 h-6 rounded-full hover:bg-gray-300 inline-flex justify-center items-center cursor-pointer"
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation()
                   window.open(
                     proxyUrl(`get-raw-book/${prefix}/${name}`),
                     "_blank"
-                  )
-                }
+                  );
+                }}
               >
                 <ExternalLink size={14} color="var(--gray-9)" />
               </span>
@@ -247,7 +248,7 @@ export const Search = () => {
         <span className="text-xs">{filterBooks.length} books total</span>
       </TextField.Slot>
 
-      <TextField.Slot>
+      {/* <TextField.Slot>
         <label htmlFor="online-mode-toggle" className="ml-2">
           Search web
         </label>
@@ -259,7 +260,7 @@ export const Search = () => {
             ev.stopPropagation();
           }}
         />
-      </TextField.Slot>
+      </TextField.Slot> */}
     </TextField.Root>
   );
 };

@@ -12,6 +12,12 @@
   /* layout */
   --h-header: 64px;
   --w-side: 240px;
+
+  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+    "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
+    "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    
+  --font-sans: "SF UI Text", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {

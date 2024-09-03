@@ -23,9 +23,9 @@ type NavItem = {
 };
 
 const navs: NavItem[] = [
-  { name: "Home", icon: <Home className="mr-4" />, link: "/" },
-  { name: "Chat with book", icon: <Bot className="mr-4" />, link: "/chat" },
-  { name: "Notebooks", icon: <NotepadText className="mr-4" />, link: "/notes" },
+  { name: "Books", icon: <Home className="mr-4" />, link: "/" },
+  { name: "Chat", icon: <Bot className="mr-4" />, link: "/chat" },
+  { name: "Notes", icon: <NotepadText className="mr-4" />, link: "/notes" },
   { name: "Read Later", icon: <Clock className="mr-4" />, link: "/read-later" },
   { name: "Liked Books", icon: <ThumbsUp className="mr-4" />, link: "/liked" },
   { name: "Settings", icon: <Settings className="mr-4" />, link: "/settings" },
