@@ -28,6 +28,7 @@ import { useBookStore, State, Actions } from "@/store/book-store";
 import { shallow } from "zustand/shallow";
 import { ButtonGroup } from "@/components/button-group";
 import {BookCtxMenu} from '@/components/book-ctx-menu'
+import {useDebounce} from 'react-use'
 
 const selector = (s: State & Actions) => ({
   books: s.books,
@@ -52,9 +53,16 @@ export default function LocalBooks({ className }: Props) {
   );
   const router = useRouter();
   const { query } = router;
-  const rawQuery = useRef("");
-  const mounted = useRef(false);
   const [viewMode, setViewMode] = useState(query.mode || ViewMode.list);
+  const [bookPath, setBookPath]=useState()
+
+  const [, cancel] = useDebounce(
+    () => {
+      setBookPath(query.p || '');
+    },
+    100,
+    [query.p]
+  );
 
   const navs = useMemo<NavProp[]>(() => {
     const first = { name: "All books", link: "/" };
@@ -75,7 +83,9 @@ export default function LocalBooks({ className }: Props) {
   }, [query.p]);
 
   useEffect(() => {
-    rawQuery.current = location.search;
+    return ()=> {
+      cancel()
+    }
   }, []);
 
   useEffect(() => {
@@ -83,16 +93,6 @@ export default function LocalBooks({ className }: Props) {
   }, [query.mode]);
 
   const fetchBooks = async (p: string, online?: boolean) => {
-    if (
-      !mounted.current &&
-      rawQuery.current.includes("?p=") &&
-      p === undefined
-    ) {
-      // ignore initial stale query.p
-      mounted.current = true;
-      return;
-    }
-
     const search_word = p || "";
 
     if (!online) {
@@ -107,8 +107,10 @@ export default function LocalBooks({ className }: Props) {
 
   useEffect(() => {
     // fixme: if depends on query.p will trigger twice when page refresh
-    fetchBooks(query.p as string, onlineMode);
-  }, [query.p, onlineMode]);
+    if(bookPath === undefined) return
+
+    fetchBooks(bookPath as string, onlineMode);
+  }, [bookPath, onlineMode]);
 
   const handleClickBook = (book: Book | OnlineBook, is_dir: boolean) => {
     if (onlineMode) {

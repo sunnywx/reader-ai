@@ -190,7 +190,7 @@ export const Search = () => {
                 onClick={(e) => {
                   e.stopPropagation()
                   window.open(
-                    proxyUrl(`get-raw-book/${prefix}/${name}`),
+                    proxyUrl(`book-blob/${prefix}/${name}`),
                     "_blank"
                   );
                 }}

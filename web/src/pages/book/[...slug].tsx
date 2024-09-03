@@ -1,8 +1,7 @@
 import { useRouter } from "next/router";
 import { PdfViewer } from "@/components/pdf-viewer";
 import Head from "next/head";
-
-const apiPrefix = "http://localhost:3001/get-raw-book";
+import {proxyUrl} from '@/lib/utils'
 
 export default function BookDetail() {
   const { query } = useRouter();
@@ -15,7 +14,7 @@ export default function BookDetail() {
       <Head>
         <title>{`Book: ${filePath}`}</title>
       </Head>
-      {filePath && <PdfViewer fileUrl={[apiPrefix, filePath].join("/")} />}
+      {filePath && <PdfViewer fileUrl={proxyUrl(['book-blob', filePath].join('/'))} />}
     </>
   );
 }
