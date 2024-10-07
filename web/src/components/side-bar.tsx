@@ -15,6 +15,8 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import cs from 'clsx'
+import {hideSidebarKey} from '@/constant/config'
+import {useLayoutStore} from '@/store/layout-store'
 
 type NavItem = {
   name: string;
@@ -34,9 +36,19 @@ const navs: NavItem[] = [
 export const Sidebar = ({className}: {className?: string}) => {
   const router = useRouter();
   const [activeLink, setActiveLink] = useState("");
+  const layoutStore=useLayoutStore()
 
   useEffect(() => {
     setActiveLink(window.location.pathname);
+    
+    // check local store hide sidebar
+    let defaultHide: boolean | null | string=localStorage.getItem(hideSidebarKey)
+    if(typeof defaultHide === 'string'){
+      defaultHide=defaultHide === 'true'
+    } else {
+      defaultHide=!!defaultHide
+    }
+    layoutStore.setSidebarStatus(defaultHide)
   }, []);
 
   useEffect(() => {

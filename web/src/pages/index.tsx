@@ -440,7 +440,7 @@ export default function LocalBooks({ className }: Props) {
   return (
     <>
       <Head>
-        <title>Reader-AI - One-stop personal learning platform</title>
+        <title>Study-AI - One-stop personal learning platform</title>
       </Head>
 
       <div className="w-full">

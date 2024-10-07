@@ -1,6 +1,6 @@
 import { TextField, Tooltip, Badge, Switch, Spinner } from "@radix-ui/themes";
 import { Search as SearchIcon, ExternalLink, CircleX } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounce } from "react-use";
 import styles from "./styles.module.scss";
 import cs from "clsx";
@@ -67,24 +67,24 @@ export const Search = () => {
   }, [focusMode, allFetched.current]);
 
   // search online books
-  useEffect(() => {
-    const fetchBooks = async (search: string) => {
-      if (!search) return;
+  // useEffect(() => {
+  //   const fetchBooks = async (search: string) => {
+  //     if (!search) return;
 
-      setLoading(true);
-      const resp = await fetch(proxyUrl(`/search-online-books/${search}`));
-      const data = await resp.json();
-      // const data=mockOnlineBooks
-      // console.log("fetch online books: ", data?.books);
-      setBooks(data?.books || []);
-      setLoading(false);
-    };
+  //     setLoading(true);
+  //     const resp = await fetch(proxyUrl(`/search-online-books/${search}`));
+  //     const data = await resp.json();
+  //     // const data=mockOnlineBooks
+  //     // console.log("fetch online books: ", data?.books);
+  //     setBooks(data?.books || []);
+  //     setLoading(false);
+  //   };
 
-    if (search && onlineMode) {
-      console.log("search word: ", search);
-      fetchBooks(search);
-    }
-  }, [search, onlineMode]);
+  //   if (search && onlineMode) {
+  //     console.log("search word: ", search);
+  //     fetchBooks(search);
+  //   }
+  // }, [search, onlineMode]);
 
   const [, cancel] = useDebounce(
     () => {
@@ -104,6 +104,20 @@ export const Search = () => {
     );
   }, [search, allBooks, onlineMode, books]);
 
+  const onClickOutside=(e: MouseEvent)=>{
+    if(inputRef.current?.parentNode && !inputRef.current.parentNode.contains(e.target)){
+      setFocusMode(false)
+    }
+  }
+
+  useEffect(()=> {
+    document.addEventListener('click', onClickOutside)
+
+    return ()=> {
+      document.removeEventListener('click', onClickOutside)
+    }
+  }, [])
+
   return (
     <TextField.Root
       placeholder="Search book"
@@ -115,9 +129,11 @@ export const Search = () => {
       onFocus={() => {
         setFocusMode(true)
       }}
-      onBlur={() => {
-        setFocusMode(false);
-      }}
+      // onBlur={() => {
+      //   setTimeout(()=> {
+      //     setFocusMode(false);
+      //   }, 50)
+      // }}
       ref={inputRef}
     >
       <TextField.Slot>
@@ -155,7 +171,8 @@ export const Search = () => {
                   setVal(name)
       
                   setTimeout(() => {
-                    inputRef.current?.blur();         
+                    // inputRef.current?.blur();         
+                    setFocusMode(false)
                   }, 100);
                 }}
               >
@@ -202,7 +219,6 @@ export const Search = () => {
       <TextField.Slot>
         <span className="text-xs">{filterBooks.length} books total</span>
       </TextField.Slot>
-
       {/* <TextField.Slot>
         <label htmlFor="online-mode-toggle" className="ml-2">
           Search web
