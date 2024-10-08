@@ -15,6 +15,8 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import cs from 'clsx'
+import {hideSidebarKey} from '@/constant/config'
+import {useLayoutStore} from '@/store/layout-store'
 
 type NavItem = {
   name: string;
@@ -23,9 +25,9 @@ type NavItem = {
 };
 
 const navs: NavItem[] = [
-  { name: "Home", icon: <Home className="mr-4" />, link: "/" },
-  { name: "Chat with book", icon: <Bot className="mr-4" />, link: "/chat" },
-  { name: "Notebooks", icon: <NotepadText className="mr-4" />, link: "/notes" },
+  { name: "Books", icon: <Home className="mr-4" />, link: "/" },
+  { name: "Chat", icon: <Bot className="mr-4" />, link: "/chat" },
+  { name: "Notes", icon: <NotepadText className="mr-4" />, link: "/notes" },
   { name: "Read Later", icon: <Clock className="mr-4" />, link: "/read-later" },
   { name: "Liked Books", icon: <ThumbsUp className="mr-4" />, link: "/liked" },
   { name: "Settings", icon: <Settings className="mr-4" />, link: "/settings" },
@@ -34,9 +36,19 @@ const navs: NavItem[] = [
 export const Sidebar = ({className}: {className?: string}) => {
   const router = useRouter();
   const [activeLink, setActiveLink] = useState("");
+  const layoutStore=useLayoutStore()
 
   useEffect(() => {
     setActiveLink(window.location.pathname);
+    
+    // check local store hide sidebar
+    let defaultHide: boolean | null | string=localStorage.getItem(hideSidebarKey)
+    if(typeof defaultHide === 'string'){
+      defaultHide=defaultHide === 'true'
+    } else {
+      defaultHide=!!defaultHide
+    }
+    layoutStore.setSidebarStatus(defaultHide)
   }, []);
 
   useEffect(() => {

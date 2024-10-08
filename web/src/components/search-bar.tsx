@@ -1,6 +1,6 @@
 import { TextField, Tooltip, Badge, Switch, Spinner } from "@radix-ui/themes";
 import { Search as SearchIcon, ExternalLink, CircleX } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounce } from "react-use";
 import styles from "./styles.module.scss";
 import cs from "clsx";
@@ -67,30 +67,30 @@ export const Search = () => {
   }, [focusMode, allFetched.current]);
 
   // search online books
-  useEffect(() => {
-    const fetchBooks = async (search: string) => {
-      if (!search) return;
+  // useEffect(() => {
+  //   const fetchBooks = async (search: string) => {
+  //     if (!search) return;
 
-      setLoading(true);
-      const resp = await fetch(proxyUrl(`/search-online-books/${search}`));
-      const data = await resp.json();
-      // const data=mockOnlineBooks
-      // console.log("fetch online books: ", data?.books);
-      setBooks(data?.books || []);
-      setLoading(false);
-    };
+  //     setLoading(true);
+  //     const resp = await fetch(proxyUrl(`/search-online-books/${search}`));
+  //     const data = await resp.json();
+  //     // const data=mockOnlineBooks
+  //     // console.log("fetch online books: ", data?.books);
+  //     setBooks(data?.books || []);
+  //     setLoading(false);
+  //   };
 
-    if (search && onlineMode) {
-      console.log("search word: ", search);
-      fetchBooks(search);
-    }
-  }, [search, onlineMode]);
+  //   if (search && onlineMode) {
+  //     console.log("search word: ", search);
+  //     fetchBooks(search);
+  //   }
+  // }, [search, onlineMode]);
 
   const [, cancel] = useDebounce(
     () => {
       setSearch(val);
     },
-    500,
+    200,
     [val]
   );
 
@@ -104,119 +104,36 @@ export const Search = () => {
     );
   }, [search, allBooks, onlineMode, books]);
 
-  function renderBookList() {
-    if (loading)
-      return (
-        <div className="w-full h-full flex justify-center items-center">
-          <Spinner />
-        </div>
-      );
-
-    if (filterBooks.length === 0) {
-      return (
-        <div className="w-full h-full flex justify-center items-center">
-          No result
-        </div>
-      );
+  const onClickOutside=(e: MouseEvent)=>{
+    if(inputRef.current?.parentNode && !inputRef.current.parentNode.contains(e.target)){
+      setFocusMode(false)
     }
-
-    if (onlineMode) {
-      return filterBooks.map(
-        // @ts-ignore
-        ({
-          id,
-          title,
-          year,
-          size,
-          download_url,
-          pages,
-          extension,
-        }: OnlineBook) => {
-          return (
-            <li
-              className={styles.item}
-              key={id}
-              onClick={(ev) => {
-                ev.preventDefault();
-
-                window.open(download_url, "_blank");
-                inputRef.current?.blur();
-              }}
-            >
-              <Tooltip content={title}>
-                <span className="truncate max-w-[90%]">{title}</span>
-              </Tooltip>
-              <div className="flex items-center">
-                {extension && <Badge color="blue">{extension}</Badge>}
-                <Tooltip content="Open in new Tab">
-                  <span
-                    className="w-6 h-6 rounded-full hover:bg-gray-300 inline-flex justify-center items-center cursor-pointer"
-                    onClick={() => window.open(download_url, "_blank")}
-                  >
-                    <ExternalLink size={14} color="var(--gray-9)" />
-                  </span>
-                </Tooltip>
-              </div>
-            </li>
-          );
-        }
-      );
-    }
-
-    return filterBooks.map(({ name, prefix, size, createAt }: Book) => {
-      return (
-        <li
-          className={styles.item}
-          key={[prefix, name].join("")}
-          onClick={(ev) => {
-            ev.stopPropagation();
-            // ev.preventDefault();
-
-            const url = `/book/${prefix}/${name}`;
-            // console.log("open book: ", url);
-            router.push(url, undefined, { shallow: true });
-
-            inputRef.current?.blur();
-          }}
-        >
-          <Tooltip content={name}>
-            <span className="truncate max-w-[90%]">{name}</span>
-          </Tooltip>
-          <div className="flex items-center">
-            {prefix && <Badge color="blue">{prefix}</Badge>}
-            <Tooltip content="Open in new Tab">
-              <span
-                className="w-6 h-6 rounded-full hover:bg-gray-300 inline-flex justify-center items-center cursor-pointer"
-                onClick={() =>
-                  window.open(
-                    proxyUrl(`get-raw-book/${prefix}/${name}`),
-                    "_blank"
-                  )
-                }
-              >
-                <ExternalLink size={14} color="var(--gray-9)" />
-              </span>
-            </Tooltip>
-          </div>
-        </li>
-      );
-    });
   }
+
+  useEffect(()=> {
+    document.addEventListener('click', onClickOutside)
+
+    return ()=> {
+      document.removeEventListener('click', onClickOutside)
+    }
+  }, [])
 
   return (
     <TextField.Root
       placeholder="Search book"
-      className={`relative h-[40px] border-solid border-slate-200 rounded-md transition-all `.concat(
-        focusMode ? "w-[800px]" : "w-[500px]"
-      )}
+      className={`relative h-[40px] border-solid border-slate-200 rounded-md transition-all ${focusMode ? "w-[800px]" : "w-[500px]"}`}
       value={val}
       onChange={(ev) => {
         setVal(ev.target.value);
       }}
-      onFocus={() => setFocusMode(true)}
-      onBlur={() => {
-        setFocusMode(false);
+      onFocus={() => {
+        setFocusMode(true)
       }}
+      // onBlur={() => {
+      //   setTimeout(()=> {
+      //     setFocusMode(false);
+      //   }, 50)
+      // }}
       ref={inputRef}
     >
       <TextField.Slot>
@@ -225,29 +142,84 @@ export const Search = () => {
 
       <ul
         className={cs(
-          "absolute top-[42px] w-full bg-slate-100 max-h-[600px] overflow-auto min-h-[100px] z-10",
+          "absolute top-[42px] w-full bg-slate-100 max-h-[600px] overflow-auto min-h-[100px] z-[100] rounded-b-md",
           styles.search_result,
           { [styles.show]: focusMode }
         )}
       >
-        {renderBookList()}
+        {loading ? (
+           <div className="w-full h-full flex justify-center items-center">
+           <Spinner />
+         </div>
+        ) : filterBooks.length === 0 ? (
+          <div className="w-full h-full flex justify-center items-center">
+          No result
+        </div>
+        ) : (
+          filterBooks.map(({ name, prefix, size, createAt }: Book) => {
+            return (
+              <li
+                className={styles.item}
+                key={[prefix, name].join("")}
+                onClick={(ev) => {
+                  // ev.stopPropagation();
+                  // ev.preventDefault();
+      
+                  const url = `/book/${prefix}/${name}`;
+                  router.push(url, undefined, { shallow: true });
+      
+                  setVal(name)
+      
+                  setTimeout(() => {
+                    // inputRef.current?.blur();         
+                    setFocusMode(false)
+                  }, 100);
+                }}
+              >
+                <Tooltip content={name}>
+                  <span className="truncate max-w-[90%]">{name}</span>
+                </Tooltip>
+                <div className="flex items-center">
+                  {prefix && <Badge color="blue">{prefix}</Badge>}
+                  <Tooltip content="Open in new Tab">
+                    <span
+                      className="w-6 h-6 rounded-full hover:bg-gray-300 inline-flex justify-center items-center cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // const path=encodeURIComponent(`${prefix}/${name}`)
+                        window.open(
+                          proxyUrl(`book-blob/${prefix}/${name}`),
+                          "_blank"
+                        );
+                      }}
+                    >
+                      <ExternalLink size={14} color="var(--gray-9)" />
+                    </span>
+                  </Tooltip>
+                </div>
+              </li>
+            );
+          })
+        )}
       </ul>
 
-      {search && (
-        <TextField.Slot>
-          <CircleX
-            size={14}
-            className="text-xs cursor-pointer hover:text-gray-300"
-            onClick={() => setVal("")}
-          />
-        </TextField.Slot>
-      )}
+      <TextField.Slot>
+        <CircleX
+          size={14}
+          className={`text-xs cursor-pointer hover:text-gray-300 ${
+            search ? "block" : "hidden"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setVal("");
+          }}
+        />
+      </TextField.Slot>
 
       <TextField.Slot>
         <span className="text-xs">{filterBooks.length} books total</span>
       </TextField.Slot>
-
-      <TextField.Slot>
+      {/* <TextField.Slot>
         <label htmlFor="online-mode-toggle" className="ml-2">
           Search web
         </label>
@@ -259,7 +231,7 @@ export const Search = () => {
             ev.stopPropagation();
           }}
         />
-      </TextField.Slot>
+      </TextField.Slot> */}
     </TextField.Root>
   );
 };

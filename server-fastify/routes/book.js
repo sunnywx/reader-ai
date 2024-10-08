@@ -5,6 +5,7 @@ import util from 'util'
 import path from "node:path";
 import { readDirectory } from "../utils/book.js";
 import { expandPath } from "../utils/index.js";
+// import {FastifyInstance} from 'fastify'
 
 const base_dir = expandPath(process.env.LOCAL_BOOK_DIR || "~/books");
 
@@ -13,7 +14,7 @@ const pipeline=util.promisify(stream.pipeline)
 
 /**
  * A plugin that provide encapsulated routes
- * @param {FastifyInstance} fastify encapsulated fastify instance
+ * @param {FastifyInstance} fast encapsulated fastify instance
  * @param {Object} options plugin options, refer to https://fastify.dev/docs/latest/Reference/Plugins/#plugin-options
  */
 export default async function bookRoutes(fast, options) {
@@ -21,7 +22,7 @@ export default async function bookRoutes(fast, options) {
   const coll = fast.mongo.db.collection("books");
 
   fast.get(
-    "/books",
+    "/test-books",
     {
       schema: {
         query: {},
@@ -115,7 +116,7 @@ export default async function bookRoutes(fast, options) {
   );
 
   fast.get(
-    "/get-raw-book/*",
+    "/book-blob/*",
     {
       schema: {
         params: {
@@ -153,4 +154,23 @@ export default async function bookRoutes(fast, options) {
       }
     }
   );
+
+  fast.delete('/book/:path',   {
+    schema: {
+      params: {
+        path: { type: "string", description: "File path" },
+      },
+      tags: ["book"],
+    },
+  },
+  async (req, reply) => {
+    const relative_path = decodeURIComponent(req.params.path || "");
+
+    const filepath = path.join(base_dir, relative_path);
+
+    // if (!fs.existsSync(dir)) return { books: [] };
+    // const books = await readDirectory(dir, relative_path);
+
+    return { book: filepath };
+  })
 }

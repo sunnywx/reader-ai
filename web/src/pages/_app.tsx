@@ -4,6 +4,7 @@ import type { AppProps } from "next/app";
 import { Theme, ThemePanel } from "@radix-ui/themes";
 import {ReactElement} from 'react'
 import {Layout} from '@/components/layout'
+import {Toaster} from 'react-hot-toast'
 
 export default function App({ Component, pageProps }: AppProps) {
   // @ts-ignore
@@ -19,6 +20,7 @@ export default function App({ Component, pageProps }: AppProps) {
     >
       {pageElem}
       {/* <ThemePanel /> */}
+      <Toaster />
     </Theme>
   );
 }

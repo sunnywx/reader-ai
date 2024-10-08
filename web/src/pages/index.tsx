@@ -9,8 +9,16 @@ import {
   LayoutGrid as GridIcon,
   List as ListIcon,
   File,
+  EllipsisVertical as More,
 } from "lucide-react";
-import { Flex, Inset, Tooltip, Table, Spinner } from "@radix-ui/themes";
+import {
+  Flex,
+  Inset,
+  Tooltip,
+  Table,
+  Spinner,
+  DropdownMenu,
+} from "@radix-ui/themes";
 import { format } from "date-fns";
 import { useRouter } from "next/router";
 import { formatSize, proxyUrl } from "@/lib/utils";
@@ -19,12 +27,14 @@ import { Book, OnlineBook } from "@/types/book";
 import { useBookStore, State, Actions } from "@/store/book-store";
 import { shallow } from "zustand/shallow";
 import { ButtonGroup } from "@/components/button-group";
+import {BookCtxMenu} from '@/components/book-ctx-menu'
+import {useDebounce} from 'react-use'
 
 const selector = (s: State & Actions) => ({
   books: s.books,
   setBooks: s.setBooks,
   onlineMode: s.onlineMode,
-  loading: s.loading
+  loading: s.loading,
 });
 
 interface Props {
@@ -37,12 +47,22 @@ enum ViewMode {
 }
 
 export default function LocalBooks({ className }: Props) {
-  const { books, setBooks, onlineMode, loading } = useBookStore(selector, shallow);
+  const { books, setBooks, onlineMode, loading } = useBookStore(
+    selector,
+    shallow
+  );
   const router = useRouter();
   const { query } = router;
-  const rawQuery = useRef("");
-  const mounted = useRef(false);
   const [viewMode, setViewMode] = useState(query.mode || ViewMode.list);
+  const [bookPath, setBookPath]=useState()
+
+  const [, cancel] = useDebounce(
+    () => {
+      setBookPath(query.p || '');
+    },
+    100,
+    [query.p]
+  );
 
   const navs = useMemo<NavProp[]>(() => {
     const first = { name: "All books", link: "/" };
@@ -63,7 +83,9 @@ export default function LocalBooks({ className }: Props) {
   }, [query.p]);
 
   useEffect(() => {
-    rawQuery.current = location.search;
+    return ()=> {
+      cancel()
+    }
   }, []);
 
   useEffect(() => {
@@ -71,16 +93,6 @@ export default function LocalBooks({ className }: Props) {
   }, [query.mode]);
 
   const fetchBooks = async (p: string, online?: boolean) => {
-    if (
-      !mounted.current &&
-      rawQuery.current.includes("?p=") &&
-      p === undefined
-    ) {
-      // ignore initial stale query.p
-      mounted.current = true;
-      return;
-    }
-
     const search_word = p || "";
 
     if (!online) {
@@ -95,8 +107,10 @@ export default function LocalBooks({ className }: Props) {
 
   useEffect(() => {
     // fixme: if depends on query.p will trigger twice when page refresh
-    fetchBooks(query.p as string, onlineMode);
-  }, [query.p, onlineMode]);
+    if(bookPath === undefined) return
+
+    fetchBooks(bookPath as string, onlineMode);
+  }, [bookPath, onlineMode]);
 
   const handleClickBook = (book: Book | OnlineBook, is_dir: boolean) => {
     if (onlineMode) {
@@ -286,14 +300,13 @@ export default function LocalBooks({ className }: Props) {
                       align="center"
                       className="relative w-full h-full text-center text-2xl font-light"
                     >
-                      <Folder
-                        size={16}
-                        className="absolute left-1 top-1"
-                        color="var(--gray-10)"
-                      />
-                      <p className="absolute right-1 top-1 text-xs">
-                        {files.length || 0} files
+                      <p className="absolute left-1 top-1 inline-flex items-center">
+                        <Folder size={16} color="var(--gray-10)" />
+                        <span className="text-xs ml-1">
+                          {files.length || 0} files
+                        </span>
                       </p>
+                      <BookCtxMenu book={book}/>
                       <p>{name}</p>
                     </Flex>
                   ) : (
@@ -319,6 +332,7 @@ export default function LocalBooks({ className }: Props) {
                             backgroundColor: "var(--gray-5)",
                           }}
                         />
+                        <BookCtxMenu book={book}/>
                       </Inset>
 
                       <div className="flex flex-1 flex-col justify-between p-1">
@@ -368,7 +382,7 @@ export default function LocalBooks({ className }: Props) {
                 return (
                   <Table.Row
                     key={index}
-                    className="hover:bg-blue-100 cursor-pointer"
+                    className="hover:bg-blue-100 cursor-pointer relative"
                     onClick={(ev) =>
                       handleClickBook(book, Array.isArray(files))
                     }
@@ -404,11 +418,14 @@ export default function LocalBooks({ className }: Props) {
                         : book.size}
                     </Table.Cell>
                     <Table.Cell>
-                      {createAt && (
-                        <p className="">
-                          {format(new Date(createAt), "yyyy/MM/dd HH:mm")}
-                        </p>
-                      )}
+                      <p className="flex items-center h-full relative">
+                        {createAt && (
+                          <p className="">
+                            {format(new Date(createAt), "yyyy/MM/dd HH:mm")}
+                          </p>
+                        )}
+                        <BookCtxMenu book={book} />
+                      </p>
                     </Table.Cell>
                   </Table.Row>
                 );
@@ -423,7 +440,7 @@ export default function LocalBooks({ className }: Props) {
   return (
     <>
       <Head>
-        <title>Reader-AI - One-stop personal learning platform</title>
+        <title>Study-AI - One-stop personal learning platform</title>
       </Head>
 
       <div className="w-full">

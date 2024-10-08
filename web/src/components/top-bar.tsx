@@ -19,7 +19,7 @@ export const TopBar = () => {
         </Tooltip>
 
         <Link className="text-lg font-semibold cursor-pointe" href="/">
-          Reader-AI
+          Study-AI
         </Link>
       </div>
 
